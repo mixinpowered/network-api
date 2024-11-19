@@ -1,0 +1,38 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Group {
+  OWNER
+  ADMIN
+  MODERATOR
+  DEFAULT
+}
+
+model Player {
+  uuid           String    @id @unique
+  group          Group     @default(DEFAULT)
+  groupExpiresAt DateTime?
+  joinedAt       DateTime  @default(now())
+  lastSeenAt     DateTime  @default(now())
+
+  duels DuelsStats?
+}
+
+model DuelsStats {
+  uuid   String @id @unique
+  elo    Int    @default(100)
+
+  player Player @relation(fields: [uuid], references: [uuid])
+}
