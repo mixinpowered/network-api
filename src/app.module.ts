@@ -9,9 +9,7 @@ import { CachingModule } from './caching/caching.module';
 import { CommonModule } from './common/common.module';
 import { PlayersModule } from './players/players.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { Keyv } from 'keyv';
-import { Cacheable } from 'cacheable';
-import KeyvRedis from '@keyv/redis';
+import { redisStore } from 'cache-manager-redis-yet';
 import * as Joi from 'joi';
 
 @Module({
@@ -25,31 +23,24 @@ import * as Joi from 'joi';
         REDIS_HOST: Joi.string().required(),
         REDIS_PORT: Joi.number().required(),
         REDIS_PASSWORD: Joi.string().required(),
-        REDIS_USERNAME: Joi.string().required(),
+        REDIS_USER: Joi.string().required(),
       }),
     }),
     CacheModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (config: ConfigService) => {
-        const redis = new Keyv({
-          store: new KeyvRedis({
-            socket: {
-              host: config.get('REDIS_HOST'),
-              port: +config.get('REDIS_PORT'),
-            },
-            password: config.get('REDIS_PASSWORD'),
-            username: config.get('REDIS_USERNAME'),
-          }),
-        });
-
-        const store = new Cacheable({
-          secondary: redis,
-          nonBlocking: true,
+      useFactory: async (config: ConfigService) => {
+        const redis = await redisStore({
+          socket: {
+            host: config.get('REDIS_HOST'),
+            port: +config.get('REDIS_PORT'),
+          },
+          password: config.get('REDIS_PASSWORD'),
+          username: config.get('REDIS_USER'),
         });
 
         return {
-          store: store as unknown as CacheStore,
+          store: redis as unknown as CacheStore,
           ttl: 60 * 60 * 2, // 2 hours
         };
       },

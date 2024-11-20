@@ -3,6 +3,7 @@ version: '3.9'
 
 services:
   database:
+    container_name: postgres
     image: postgres
     restart: always
     # set shared memory limit when using docker-compose
@@ -20,10 +21,27 @@ services:
     ports:
       - 5432:5432
 
-  adminer:
-    image: adminer
+  cache:
+    container_name: redis
+    image: redis
     restart: always
+    environment:
+      - REDIS_ARGS=--requirepass ${REDIS_PASSWORD}
     ports:
-      - 8080:8080
+      - ${REDIS_PORT}:6379
 
+  commander:
+    container_name: redis-commander
+    hostname: redis-commander
+    image: ghcr.io/joeferner/redis-commander:latest
+    restart: always
+    depends_on:
+      - cache
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+      - REDIS_USERNAME=${REDIS_USER}
+    ports:
+      - 8081:8081
   

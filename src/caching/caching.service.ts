@@ -1,10 +1,10 @@
 import { Inject, Injectable, OnApplicationBootstrap } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cacheable } from 'cacheable';
+import { Cache } from 'cache-manager';
 
 @Injectable()
 export class CachingService implements OnApplicationBootstrap {
-  constructor(@Inject(CACHE_MANAGER) private cache: Cacheable) {}
+  constructor(@Inject(CACHE_MANAGER) private cache: Cache) {}
 
   async set(key: string, value: any, ttl?: number) {
     await this.cache.set(key, value, ttl);
@@ -15,10 +15,10 @@ export class CachingService implements OnApplicationBootstrap {
   }
 
   async delete(key: string) {
-    await this.cache.delete(key);
+    await this.cache.del(key);
   }
 
   async onApplicationBootstrap() {
-    await this.cache.clear();
+    await this.cache.reset();
   }
 }
