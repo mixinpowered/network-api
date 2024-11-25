@@ -9,6 +9,10 @@ export class PlayersService {
   constructor(private prisma: PrismaService) {}
 
   async create(createPlayerDto: CreatePlayerDto): Promise<Player> {
+    if (this.findOne(createPlayerDto.uuid)) {
+      throw new Error('Player already exists');
+    }
+
     return this.prisma.player.create({ data: { ...createPlayerDto } });
   }
 
